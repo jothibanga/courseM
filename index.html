@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MLX Academy — Machine Learning: Zero → Industry-Ready</title>
+  <style>
+    :root {
+      --bg: #0b1220;         /* Deep blue background */
+      --panel:#0f172a;       /* Card background */
+      --ink:#e5e7eb;         /* Primary text */
+      --muted:#9aa3b2;       /* Muted text */
+      --brand:#7c3aed;       /* Primary brand (violet) */
+      --accent:#22d3ee;      /* Accent (cyan) */
+      --ok:#22c55e;          /* Success */
+      --warn:#fbbf24;        /* Warning */
+      --err:#ef4444;         /* Error */
+      --ring:#22d3ee55;      /* Focus ring */
+      --cardBorder:#1f2937;  /* Card border */
+      --soft:#111827;        /* Soft surfaces */
+      --chip:#1d2433;        /* Chip */
+      --shadow: 0 30px 60px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:radial-gradient(1200px 700px at 10% -10%, rgba(124,58,237,.25), transparent), radial-gradient(1000px 600px at 90% -10%, rgba(34,211,238,.15), transparent), var(--bg); color:var(--ink); font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;}
+    a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+    .container{max-width:1100px;margin:0 auto;padding:16px}
+    .card{background:linear-gradient(180deg, #0f172a, #0b1324);border:1px solid var(--cardBorder);border-radius:18px;box-shadow:var(--shadow);}
+    .card-h{padding:16px 20px;border-bottom:1px solid var(--cardBorder)}
+    .card-b{padding:16px 20px}
+    .row{display:flex;gap:16px;align-items:center}
+    .col{display:flex;flex-direction:column;gap:12px}
+    .grid{display:grid;gap:16px}
+    .btn{display:inline-flex;gap:8px;align-items:center;justify-content:center;padding:10px 14px;border-radius:12px;border:1px solid #2b3446;background:linear-gradient(135deg, var(--brand), #1e40af);color:#fff;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(124,58,237,.25)}
+    .btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+    .btn.secondary{background:#0b1220;color:#e5e7eb;border-color:#2b3446}
+    .btn.warn{background:linear-gradient(135deg, #f59e0b, #b45309)}
+    .btn.ok{background:linear-gradient(135deg, #16a34a, #065f46)}
+    .muted{color:var(--muted);font-size:14px}
+    .input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #2b3446;background:#0b1220;color:#e5e7eb;outline:none}
+    .input:focus{border-color:#22d3ee;box-shadow:0 0 0 6px var(--ring)}
+    .list{list-style:disc;margin-left:18px}
+    .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:var(--chip);border:1px solid #2b3446;color:#cbd5e1;font-size:12px}
+    .progress{height:8px;background:#1f2937;border-radius:999px;overflow:hidden;border:1px solid #2b3446}
+    .progress>span{display:block;height:100%;background:linear-gradient(90deg, var(--accent), #60a5fa);border-radius:999px}
+    .hidden{display:none}
+    iframe{border:0;border-radius:12px}
+    .topic{border:1px solid #2b3446;border-radius:12px;padding:12px;background:#0b1220}
+    .lock{opacity:.7;filter:grayscale(0.15)}
+    .sticky{position:sticky;top:24px}
+    .toast{position:fixed;right:16px;bottom:16px;background:#0ea5e9;color:#07121f;padding:10px 12px;border-radius:10px;opacity:.95;animation:fade 3s forwards;font-weight:700}
+    @keyframes fade{0%{opacity:0;transform:translateY(6px)}15%{opacity:.95;transform:none}85%{opacity:.95}100%{opacity:0}}
+    .header{position:sticky;top:0;background:rgba(7, 18, 31, .6);backdrop-filter:blur(10px);border-bottom:1px solid #1f2937;z-index:20}
+    .pill{display:inline-flex;gap:8px;align-items:center;border:1px solid #2b3446;border-radius:999px;padding:6px 10px;background:#0b1220}
+    .hero{display:grid;grid-template-columns:1.3fr 1fr;gap:24px;align-items:center;padding:20px}
+    .hero-img{border-radius:16px;overflow:hidden;border:1px solid #2b3446;box-shadow:0 20px 40px rgba(0,0,0,.35)}
+    .hero-img img{width:100%;height:auto;display:block}
+    .kicker{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(90deg, rgba(124,58,237,.25), rgba(34,211,238,.25));border:1px solid #2b3446;color:#dbeafe;padding:6px 10px;border-radius:999px;font-size:12px}
+    .points{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container row" style="justify-content:space-between;padding:10px 16px;">
+      <div class="row" style="gap:10px;font-weight:800;letter-spacing:.3px"><span>🧠</span> MLX Academy</div>
+      <div class="row" style="gap:12px">
+        <div id="progress-pill" class="pill hidden"><span>Progress</span><div class="progress" style="width:180px"><span id="progress-bar" style="width:0%"></span></div><strong id="progress-txt">0%</strong></div>
+        <button id="signoutBtn" class="btn secondary hidden">Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" id="app"></main>
+
+  <script>
+    // -------------- Hash Router --------------
+    const getRoute = () => (location.hash.replace(/^#/, '') || '/');
+    const setRoute = (path) => { location.hash = path; };
+
+    // -------------- State & Utils --------------
+    const STORAGE_KEY = "mlx_singlefile_v1";
+    const DEMO_USER = { username: "aashay", password: "aashaymishra" };
+    const $ = (sel,root=document)=>root.querySelector(sel);
+    const el = (tag, attrs={}, children=[]) => {
+      const n = document.createElement(tag);
+      Object.entries(attrs).forEach(([k,v]) => {
+        if (k === "class") n.className = v;
+        else if (k.startsWith("on")) n.addEventListener(k.slice(2).toLowerCase(), v);
+        else if (k === "html") n.innerHTML = v;
+        else n.setAttribute(k, v);
+      });
+      (Array.isArray(children)?children:[children]).filter(Boolean).forEach(c=> n.append(c.nodeType ? c : document.createTextNode(c)));
+      return n;
+    };
+    const toast = (msg) => { const t = el('div',{class:'toast'},msg); document.body.append(t); setTimeout(()=>t.remove(),3000); };
+
+    function load(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch{ return {}; } }
+    function save(s){ localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+    let state = load();
+
+    // -------------- Course Model --------------
+    const course = {
+      id: "mlx-zero-to-industry",
+      title: "Machine Learning: Zero → Industry-Ready",
+      tagline: "Learn by building: videos, quizzes, real projects, and a verifiable certificate.",
+      estHours: 60,
+      level: "Beginner to Intermediate",
+      lang: "English",
+      modules: [
+        { id: "m1", title: "Module 1 · Foundations & Mindset", lockAfter: false, description: "Set up your environment, understand ML taxonomy, and learn how ML systems deliver value.",
+          project: { id:"m1p", title:"Project: Titanic Survival Baseline", brief:"Clean a dataset, build baseline models, and submit predictions.", deliverable:"Notebook/repo link + CSV." },
+          subtopics: [
+            { id:"m1t1", title:"What is ML? Problem Types & Workflow", intro:"Supervised vs unsupervised, regression vs classification, standard workflow.",
+              videoUrl:"https://www.youtube.com/embed/i_LwzRVP7bg?rel=0",
+              quiz:[{q:"Which is supervised learning?", options:["K-Means","Linear Regression","PCA","t-SNE"], answer:1},{q:"Primary goal of regression?", options:["Class labels","Continuous values","Clusters","Rules"], answer:1}]},
+            { id:"m1t2", title:"Tooling Setup: Python, Notebooks, Git", intro:"Install Python, Jupyter/VS Code, venv, and essential Git.",
+              videoUrl:"https://www.youtube.com/embed/rfscVS0vtbw?rel=0",
+              quiz:[{q:"Command to create venv?", options:["pip install venv","python -m venv .venv","venv create","mkvenv"], answer:1},{q:"Git saves a snapshot as a …", options:["push","branch","commit","fork"], answer:2}]},
+            { id:"m1t3", title:"From Data to Value: The ML Lifecycle", intro:"Data sourcing, labeling, modeling, deployment, and monitoring.",
+              videoUrl:"https://www.youtube.com/embed/GwIo3gDZCVQ?rel=0",
+              quiz:[{q:"Post-deploy metric drift affects…", options:["Training only","Inference only","Both data & predictions","Nothing"], answer:2}]},
+          ]},
+        { id:"m2", title:"Module 2 · Data Literacy & Preparation", lockAfter:false, description:"EDA, feature types, cleaning, and train/validation/test splits.",
+          project:{id:"m2p", title:"Project: EDA Storytelling", brief:"EDA on a real dataset with a short report.", deliverable:"Notebook + 1-page summary."},
+          subtopics:[
+            {id:"m2t1", title:"EDA Essentials", intro:"Distributions, outliers, correlations.", videoUrl:"https://www.youtube.com/embed/vmEHCJofslg?rel=0",
+             quiz:[{q:"Boxplot highlights…", options:["Mean only","Outliers & spread","Time trends","Geographic density"], answer:1}]},
+            {id:"m2t2", title:"Feature Engineering Basics", intro:"Scaling, encoding, text features.", videoUrl:"https://www.youtube.com/embed/NxEHSAfFlK8?rel=0",
+             quiz:[{q:"One-hot encoding best for…", options:["Texts","Continuous","Categorical","Images"], answer:2}]},
+            {id:"m2t3", title:"Data Splits & Leakage", intro:"Robust splits & avoiding leakage.", videoUrl:"https://www.youtube.com/embed/GcXcSZ0gQps?rel=0",
+             quiz:[{q:"Leakage means…", options:["Using test info in training","Missing values","Overfitting","None"], answer:0}]},
+          ]},
+        { id:"m3", title:"Module 3 · Classical ML Models", lockAfter:false, description:"Linear/Logistic regression, trees, ensembles, and model selection.",
+          project:{id:"m3p", title:"Project: Churn Prediction", brief:"Baseline + ensemble; compare ROC-AUC.", deliverable:"Repo + metrics table + README."},
+          subtopics:[
+            {id:"m3t1", title:"Linear & Logistic Regression", intro:"OLS to classification with regularization.", videoUrl:"https://www.youtube.com/embed/yIYKR4sgzI8?rel=0",
+             quiz:[{q:"Logistic output is…", options:["Any real number","Probability 0-1","Label directly","Odds only"], answer:1}]},
+            {id:"m3t2", title:"Trees & Random Forests", intro:"Nonlinear splits, bagging, importance.", videoUrl:"https://www.youtube.com/embed/7VeUPuFGJHk?rel=0",
+             quiz:[{q:"Random Forest reduces…", options:["Bias","Variance","Both","Neither"], answer:1}]},
+            {id:"m3t3", title:"Gradient Boosting (XGBoost/LightGBM)", intro:"Boosting residuals & tuning.", videoUrl:"https://www.youtube.com/embed/OtD8wVaFm6E?rel=0",
+             quiz:[{q:"Boosting trains trees…", options:["In parallel","On residuals sequentially","On test set","Randomly"], answer:1}]},
+          ]},
+        { id:"m4", title:"Module 4 · Model Evaluation & Experimentation", lockAfter:false, description:"Metrics, cross-validation, tuning, and experiment tracking.",
+          project:{id:"m4p", title:"Project: Experiment Tracker", brief:"Use MLflow/W&B to compare models.", deliverable:"Dashboard screenshots + notebook."},
+          subtopics:[
+            {id:"m4t1", title:"Metrics that Matter", intro:"Accuracy, precision/recall/F1, ROC-AUC, PR-AUC.", videoUrl:"https://www.youtube.com/embed/4jRBRDbJemM?rel=0",
+             quiz:[{q:"Imbalanced classes prefer…", options:["Accuracy","F1/PR-AUC","MSE","R^2"], answer:1}]},
+            {id:"m4t2", title:"Cross-Validation & Tuning", intro:"K-fold CV, grid/random search.", videoUrl:"https://www.youtube.com/embed/3TrmTfvzV94?rel=0",
+             quiz:[{q:"K-fold CV reduces…", options:["Leakage","Variance of estimate","Overfitting always","Features"], answer:1}]},
+            {id:"m4t3", title:"Experiment Tracking", intro:"Log params/metrics/artifacts.", videoUrl:"https://www.youtube.com/embed/PPaQJuOd1VI?rel=0",
+             quiz:[{q:"Tracking helps…", options:["Reproducibility","Randomness","Data collection","GPU only"], answer:0}]},
+          ]},
+        { id:"m5", title:"Module 5 · Neural Networks & Deep Learning", lockAfter:true, description:"Perceptrons, backprop, training tricks, CNNs & transfer learning.",
+          project:{id:"m5p", title:"Project: Image Classifier", brief:"Train a CNN and deploy a demo.", deliverable:"Repo + hosted demo link."},
+          subtopics:[
+            {id:"m5t1", title:"Neural Nets 101", intro:"Perceptrons, activation, backprop.", videoUrl:"https://www.youtube.com/embed/aircAruvnKk?rel=0",
+             quiz:[{q:"Backprop uses…", options:["Chain rule","Monte Carlo","Fourier","A*"], answer:0}]},
+            {id:"m5t2", title:"Training Deep Nets", intro:"Optimizers, schedules, regularization.", videoUrl:"https://www.youtube.com/embed/IHZwWFHWa-w?rel=0",
+             quiz:[{q:"BatchNorm helps…", options:["Exploding dims","Internal covariate shift","GPU temps","File size"], answer:1}]},
+            {id:"m5t3", title:"CNNs & Transfer Learning", intro:"Convolutions, pooling, fine-tuning.", videoUrl:"https://www.youtube.com/embed/YRhxdVk_sIs?rel=0",
+             quiz:[{q:"Transfer learning is…", options:["Training from scratch","Using pretrained features","Data augmentation","Bagging"], answer:1}]},
+          ]},
+        { id:"m6", title:"Module 6 · MLOps & Deployment", lockAfter:true, description:"APIs, containers, monitoring, and CI/CD.",
+          project:{id:"m6p", title:"Project: Serve a Model API", brief:"Containerize FastAPI model with logging.", deliverable:"Live endpoint + repo."},
+          subtopics:[
+            {id:"m6t1", title:"From Notebook to API", intro:"FastAPI, packaging, versioning.", videoUrl:"https://www.youtube.com/embed/UBAKQ1Lq2Ro?rel=0",
+             quiz:[{q:"API returns…", options:["Weights","Predictions","Dockerfile","GPU info"], answer:1}]},
+            {id:"m6t2", title:"Containers & Cloud Basics", intro:"Docker images, registries, cloud deploy.", videoUrl:"https://www.youtube.com/embed/eCI2oI9lX6I?rel=0",
+             quiz:[{q:"Dockerfile defines…", options:["Image build steps","Cluster rules","DB schema","Auth keys"], answer:0}]},
+            {id:"m6t3", title:"Monitoring & Alerts", intro:"Data/concept drift, metrics, alerts.", videoUrl:"https://www.youtube.com/embed/sQYpZGjTr-I?rel=0",
+             quiz:[{q:"Concept drift changes…", options:["Label meaning","Batch size","Repo name","CPU"], answer:0}]},
+          ]},
+        { id:"m7", title:"Module 7 · Capstone & Career Sprint", lockAfter:true, description:"End-to-end product & interview prep.",
+          project:{id:"m7p", title:"Capstone: End-to-End ML Product", brief:"Build & ship an ML product with monitoring.", deliverable:"Repo + demo + write-up."},
+          subtopics:[
+            {id:"m7t1", title:"Product Thinking for ML", intro:"Problem framing, KPIs, experimentation.", videoUrl:"https://www.youtube.com/embed/hYx6n-WJBNI?rel=0",
+             quiz:[{q:"North-star metric is…", options:["Random metric","Guiding product metric","Server uptime","Bug count"], answer:1}]},
+            {id:"m7t2", title:"Interview Readiness", intro:"Concepts, coding, system design.", videoUrl:"https://www.youtube.com/embed/8K8s2vC2F-4?rel=0",
+             quiz:[{q:"Case study focuses on…", options:["Syntax","Product/experiments","GPU tuning","LaTeX"], answer:1}]},
+            {id:"m7t3", title:"Portfolio & Personal Branding", intro:"Polish projects & profiles.", videoUrl:"https://www.youtube.com/embed/ql3SDNw4s0k?rel=0",
+             quiz:[{q:"Best portfolio shows…", options:["Only code","Impact & storytelling","Memes","Secrets"], answer:1}]},
+          ]},
+      ]};
+
+    // Init state defaults
+    if (!state.user) state.user = null;
+    if (state.paid === undefined) state.paid = false;
+    if (!state.modules) state.modules = {};
+    if (!state.topics) state.topics = {};
+    if (Object.keys(state.modules).length === 0) {
+      course.modules.forEach((m, idx) => {
+        state.modules[m.id] = { unlocked: idx===0, completed:false, projectSubmitted:false };
+      });
+      save(state);
+    }
+
+    const app = document.getElementById("app");
+
+    function setProgressPill(p){
+      const pill = document.getElementById("progress-pill");
+      const bar = document.getElementById("progress-bar");
+      const txt = document.getElementById("progress-txt");
+      if (!state.user){ pill.classList.add("hidden"); return; }
+      pill.classList.remove("hidden");
+      bar.style.width = p + "%";
+      txt.textContent = Math.round(p)+"%";
+    }
+
+    function computeProgress(){
+      let total = 0, done = 0;
+      course.modules.forEach(m=>{
+        m.subtopics.forEach(t=>{
+          total += 2;
+          const ts = state.topics[t.id] || {};
+          if (ts.watched) done += 1;
+          const pass = ts.quiz && ts.quiz.answered && ts.quiz.score >= Math.ceil(t.quiz.length*0.6);
+          if (pass) done += 1;
+        });
+        total += 1;
+        if (state.modules[m.id]?.projectSubmitted) done += 1;
+      });
+      return total ? (done/total)*100 : 0;
+    }
+
+    function render(){
+      app.innerHTML = "";
+      $("#signoutBtn").classList.toggle("hidden", !state.user);
+      $("#signoutBtn").onclick = () => { state = { user:null, paid:false, modules:{}, topics:{} }; localStorage.removeItem(STORAGE_KEY); toast("Signed out"); setRoute("/login"); };
+      setProgressPill(computeProgress());
+
+      const path = getRoute();
+      if (!state.user && path !== "/login"){ return setRoute("/login"); }
+      if (!state.user) return renderLogin();
+      if (path.startsWith("/topic/")) return renderTopic(path.split("/topic/")[1]);
+      if (path.startsWith("/module/")) return renderModule(path.split("/module/")[1]);
+      return renderHome();
+    }
+
+    // -------------- Login --------------
+    function renderLogin(){
+      app.append(el("div", {class:"container", style:"max-width:480px;margin:40px auto;"},
+        el("div", {class:"card"},
+          [ el("div", {class:"card-h"}, el("div", {html:"<strong>Sign in</strong><div class='muted'>Content after Module 4 is paywalled.</div>"})),
+            el("div", {class:"card-b col"},
+              [
+                el("div", {}, [el("label",{for:"u"},"Username"), el("input",{id:"u",class:"input",placeholder:"Enter your username",autocomplete:"username", onkeydown:(e)=>{ if(e.key==="Enter") document.getElementById("signinBtn").click(); }})]),
+                el("div", {}, [el("label",{for:"p"},"Password"), el("input",{id:"p",type:"password",class:"input",placeholder:"Enter your password",autocomplete:"current-password", onkeydown:(e)=>{ if(e.key==="Enter") document.getElementById("signinBtn").click(); }})]),
+                el("button",{id:"signinBtn", class:"btn", onclick:() => {
+                  const u = $("#u").value.trim();
+                  const p = $("#p").value.trim();
+                  if (u===DEMO_USER.username && p===DEMO_USER.password){
+                    state.user = { username:u };
+                    if (Object.keys(state.modules).length===0){
+                      course.modules.forEach((m,idx)=> state.modules[m.id]={unlocked:idx===0,completed:false,projectSubmitted:false});
+                    }
+                    save(state);
+                    toast("Welcome back, "+u+"!");
+                    setRoute("/");
+                  } else {
+                    toast("Invalid credentials.");
+                  }
+                }}, "Sign in")
+              ]
+            )
+          ]
+        )
+      ));
+    }
+
+    // -------------- Home --------------
+    function renderHome(){
+      const certEnabled = course.modules.every(m => state.modules[m.id]?.completed) && state.paid;
+
+      // Hero section with image + colored chips
+      const hero = el("div",{class:"card"},
+        el("div",{class:"hero"},
+          [
+            el("div",{class:"col"},[
+              el("span",{class:"kicker"},"Machine Learning: Zero → Industry-Ready"),
+              el("div",{style:"font-size:28px;font-weight:900;line-height:1.2;margin-top:6px"}, "Learn by building: videos, quizzes, real projects, and a verifiable certificate."),
+              el("div",{class:"points"},
+                [
+                  el("span",{class:"badge"},"Beginner → Intermediate"),
+                  el("span",{class:"badge"},`~${course.estHours} hours`),
+                  el("span",{class:"badge"},course.lang),
+                ]
+              ),
+              el("div",{class:"row", style:"margin-top:8px;gap:10px"},[
+                el("a",{href:"#/module/m1", onclick:(e)=>{e.preventDefault(); setRoute("/module/m1")}, class:"btn"}, "Start Learning →"),
+                el("a",{href:"#checkout", onclick:(e)=>{e.preventDefault(); document.getElementById("checkout-anchor").scrollIntoView({behavior:'smooth'});}, class:"btn secondary"}, "Unlock Premium")
+              ])
+            ]),
+            el("div",{class:"hero-img"},
+              el("img",{alt:"Abstract AI visualization", src:"https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=60"})
+            )
+          ]
+        )
+      );
+
+      app.append(
+        el("div",{class:"grid", style:"gap:24px;margin-top:16px"},
+          [
+            el("div",{class:"grid", style:"grid-template-columns:2fr 1fr;gap:16px"},
+              [
+                hero,
+                el("div",{class:"card"},[
+                  el("div",{class:"card-h"}, el("div",{html:"<strong>🏆 Certificate</strong><div class='muted'>Complete all modules & projects (Modules 5–7 require payment) to download.</div>"})),
+                  el("div",{class:"card-b"},[ certificateView(certEnabled) ])
+                ])
+              ]
+            ),
+            el("div",{class:"grid", style:"grid-template-columns:2fr 1fr;gap:16px"},
+              [
+                el("div",{class:"grid", style:"gap:16px"},
+                  course.modules.map((m,idx)=> moduleCard(m, idx+1))
+                ),
+                monetizationPanel()
+              ]
+            )
+          ]
+        )
+      );
+    }
+
+    function moduleCard(m, idx){
+      const locked = m.lockAfter && !state.paid;
+      const completed = state.modules[m.id]?.completed;
+      return el("div",{class:"card "+(locked?"lock":""),},
+        [
+          el("div",{class:"card-h row", style:"justify-content:space-between"},
+            [
+              el("div",{},[
+                el("span",{class:"badge"}, idx),
+                " ",
+                el("strong",{}, m.title),
+                " ",
+                locked ? el("span",{class:"badge"},"Locked") : null,
+                completed ? el("span",{class:"badge"},"Done") : null,
+              ]),
+              el("a",{href:`#/module/${m.id}`, onclick:(e)=>{e.preventDefault(); setRoute(`/module/${m.id}`)}}, "Open →")
+            ]
+          ),
+          el("div",{class:"card-b col"},[
+            el("div",{class:"muted"}, m.description),
+            el("div",{class:"col"}, m.subtopics.map((t,i)=> topicRow(m,t,i+1))),
+            el("div",{class:"row", style:"justify-content:space-between"},[
+              el("div", {class:"muted"}, `Module Project: ${m.project.title}`),
+              el("a",{href:`#/module/${m.id}`, onclick:(e)=>{e.preventDefault(); setRoute(`/module/${m.id}`)}}, "Open module →")
+            ])
+          ])
+        ]
+      );
+    }
+
+    function topicRow(m,t,i){
+      const ts = state.topics[t.id] || {};
+      const locked = m.lockAfter && !state.paid;
+      return el("div",{class:"topic row", style:"justify-content:space-between"},
+        [
+          el("div",{},[el("div",{style:"font-weight:700"}, t.title), el("div",{class:"muted", style:"font-size:12px"}, t.intro)]),
+          el("div",{class:"row", style:"gap:8px"},[
+            ts.watched ? el("span",{class:"badge"},"Watched") : null,
+            ts.quiz?.answered ? el("span",{class:"badge"}, `${ts.quiz.length? ts.quiz.score:0}/${t.quiz.length}`) : null,
+            locked ? el("span",{class:"badge"},"Locked") :
+              el("a",{href:`#/topic/${t.id}`, onclick:(e)=>{e.preventDefault(); setRoute(`/topic/${t.id}`)}}, "Open ▶")
+          ])
+        ]
+      );
+    }
+
+    // -------------- Module & Topic --------------
+    function renderModule(moduleId){
+      const m = course.modules.find(x=>x.id===moduleId);
+      if (!m) return setRoute("/");
+      if (m.lockAfter && !state.paid) return setRoute("/");
+      app.append(
+        el("div",{class:"grid", style:"grid-template-columns:2fr 1fr;gap:16px;margin-top:16px"},
+          [
+            el("div",{class:"card"},[
+              el("div",{class:"card-h"}, el("div",{html:`<strong>${m.title}</strong><div class='muted'>${m.description}</div>`})),
+              el("div",{class:"card-b col"}, m.subtopics.map((t,i)=> el("div",{class:"topic col"},[
+                el("div",{class:"muted"}, `Topic ${i+1}`),
+                el("div",{style:"font-weight:700"}, t.title),
+                el("div",{class:"muted"}, "Intro: "+t.intro),
+                el("a",{href:`#/topic/${t.id}`, onclick:(e)=>{e.preventDefault(); setRoute(`/topic/${t.id}`)}}, "Watch & Quiz →")
+              ])))
+            ]),
+            projectPanel(m)
+          ]
+        )
+      );
+    }
+
+    function renderTopic(topicId){
+      let module = null, topic = null;
+      for (const m of course.modules){
+        const t = m.subtopics.find(tt=>tt.id===topicId);
+        if (t){ module = m; topic=t; break; }
+      }
+      if (!topic) return setRoute("/");
+      if (module.lockAfter && !state.paid) return setRoute(`/module/${module.id}`);
+
+      const ts = state.topics[topic.id] || {};
+      const passMark = Math.ceil(topic.quiz.length*0.6);
+
+      const wrap = el("div",{class:"grid", style:"grid-template-columns:2fr 1fr;gap:16px;margin-top:16px"});
+      const left = el("div",{class:"card"},[
+        el("div",{class:"card-h"}, el("div",{html:`<strong>🎬 ${topic.title}</strong>`})),
+        el("div",{class:"card-b col"},[
+          el("div",{class:"muted"},"Intro: "+topic.intro),
+          el("div",{style:"aspect-ratio:16/9; width:100%; overflow:hidden; border:1px solid #2b3446; border-radius:12px"},
+            el("iframe",{width:"100%",height:"100%",src:topic.videoUrl,allow:"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",allowfullscreen:"true", onload:()=>{
+              state.topics[topic.id] = state.topics[topic.id] || {};
+              state.topics[topic.id].watched = true; save(state); setProgressPill(computeProgress());
+            }})
+          ),
+          quizView(topic, ts, passMark)
+        ])
+      ]);
+
+      wrap.append(left, projectPanel(module, true));
+      app.append(wrap);
+    }
+
+    function quizView(topic, ts, passMark){
+      const holder = el("div",{class:"topic col"});
+      holder.append(el("div",{style:"font-weight:700"},"Quiz"));
+      topic.quiz.forEach((q, qi) => {
+        const block = el("div",{class:"col"});
+        block.append(el("div",{},`Q${qi+1}. ${q.q}`));
+        q.options.forEach((opt, oi)=>{
+          const id = `q-${topic.id}-${qi}-${oi}`;
+          const lab = el("label", {class:"row", style:"gap:8px;align-items:center"});
+          const radio = el("input",{type:"radio",name:`q-${topic.id}-${qi}`,id});
+          radio.addEventListener("change",()=>{
+            ts.answers = ts.answers || Array(topic.quiz.length).fill(null);
+            ts.answers[qi] = oi; state.topics[topic.id] = ts; save(state);
+          });
+          lab.append(radio, el("span",{},opt));
+          block.append(lab);
+        });
+        holder.append(block);
+      });
+      const result = el("div", {class:"row", style:"gap:8px;align-items:center"});
+      const submitBtn = el("button",{class:"btn", onclick:()=>{
+        const answers = (state.topics[topic.id]&&state.topics[topic.id].answers) || [];
+        let correct = 0; topic.quiz.forEach((q,i)=>{ if (answers[i]===q.answer) correct++; });
+        state.topics[topic.id] = state.topics[topic.id] || {};
+        state.topics[topic.id].quiz = { answered:true, score:correct };
+        save(state);
+        result.innerHTML = `<span class='badge'>${correct}/${topic.quiz.length} ${correct>=passMark? "(Pass)":"(Retry allowed)"}</span>`;
+        toast(`${correct}/${topic.quiz.length} correct`);
+        setProgressPill(computeProgress());
+      }}, "Submit");
+      result.append(submitBtn);
+      holder.append(result);
+      if (ts.quiz && ts.quiz.answered){
+        result.innerHTML = `<span class='badge'>${ts.quiz.score}/${topic.quiz.length} ${ts.quiz.score>=passMark? "(Pass)":"(Retry allowed)"}</span>`;
+        result.append(submitBtn);
+      }
+      return holder;
+    }
+
+    // -------------- Project Panel --------------
+    function projectPanel(module, compact=false){
+      const ms = state.modules[module.id] || {};
+      const locked = module.lockAfter && !state.paid;
+      const box = el("div",{class:"card "+(compact?'sticky':''), style: compact?'top:24px':''},[
+        el("div",{class:"card-h"}, el("div",{html:`<strong>🚀 ${module.project.title}</strong><div class='muted'>${module.project.brief}</div>`})),
+        el("div",{class:"card-b col"},[
+          el("div",{class:"muted"},"Deliverable: "+module.project.deliverable),
+          el("input",{id:`plink-${module.id}`,class:"input",placeholder:"https://github.com/yourname/your-project"}),
+          el("div",{class:"row", style:"gap:8px;align-items:center"},
+            [
+              el("button",{class:"btn", disabled:locked, onclick:()=>{
+                const val = document.getElementById(`plink-${module.id}`).value.trim();
+                if (!val) return toast("Add your repo/notebook link");
+                state.modules[module.id] = state.modules[module.id] || {};
+                state.modules[module.id].projectSubmitted = true; save(state); toast("Project submitted!");
+                autoUpdateModuleCompletion(module);
+                render();
+              }}, "Submit Project"),
+              locked ? el("span",{class:"badge"},"Locked") : null,
+              ms.projectSubmitted ? el("span",{class:"badge"},"Submitted") : null
+            ]
+          )
+        ])
+      ]);
+      return box;
+    }
+
+    function autoUpdateModuleCompletion(module){
+      const allPassed = module.subtopics.every(t => {
+        const ts = state.topics[t.id];
+        const passMark = Math.ceil(t.quiz.length*0.6);
+        return ts?.watched && ts?.quiz?.answered && (ts.quiz.score ?? 0) >= passMark;
+      });
+      const done = allPassed && (state.modules[module.id]?.projectSubmitted || false);
+      state.modules[module.id] = state.modules[module.id] || {};
+      state.modules[module.id].completed = done;
+      const idx = course.modules.findIndex(m=>m.id===module.id);
+      const next = course.modules[idx+1];
+      if (done && next) {
+        state.modules[next.id] = state.modules[next.id] || {};
+        state.modules[next.id].unlocked = true;
+      }
+      save(state);
+      setProgressPill(computeProgress());
+    }
+
+    // -------------- Monetization --------------
+    function monetizationPanel(){
+      const anchor = el("div",{id:"checkout-anchor"});
+      return el("div",{class:"card"},[
+        el("div",{class:"card-h"}, el("div",{html:"<strong>🛡️ Premium Benefits</strong><div class='muted'>High engagement + strong monetization.</div>"})),
+        el("div",{class:"card-b col"},[
+          el("ul",{class:"list"},[
+            el("li",{},"Unlock Modules 5–7 (DL, MLOps, Career Sprint)"),
+            el("li",{},"Capstone review & feedback"),
+            el("li",{},"Downloadable certificate"),
+            el("li",{},"Priority Q&A support"),
+          ]),
+          checkoutCard(),
+          anchor
+        ])
+      ]);
+    }
+
+    function checkoutCard(){
+      const email = el("input",{class:"input",placeholder:"you@example.com"});
+      const cb = el("input",{type:"checkbox", style:"transform:translateY(2px)"});
+      const pay = el("button",{class:"btn warn", disabled:true, onclick:()=>{
+        state.paid = true; save(state); toast("Payment successful — premium unlocked!");
+        render();
+      }}, "Pay ₹1,999 & Unlock");
+      cb.addEventListener("change",()=>{ pay.disabled = !(cb.checked && email.value.includes("@")); });
+      email.addEventListener("input",()=>{ pay.disabled = !(cb.checked && email.value.includes("@")); });
+      return el("div",{class:"col"},[
+        el("div",{}, "Demo checkout — no real charge."),
+        el("div",{}, [el("label",{},"Email for receipt"), email]),
+        el("label",{}, [cb, " I agree to the terms and refund policy"]),
+        pay
+      ]);
+    }
+
+    // -------------- Certificate --------------
+    function certificateView(enabled){
+      const wrap = el("div",{class:"col"});
+      const cert = el("div",{id:"cert", style:"border:1px dashed #334155;border-radius:16px;padding:16px;text-align:center;background:linear-gradient(180deg, #0b1220, #0e182c)"});
+      cert.innerHTML = `
+        <div style="color:#93c5fd;font-size:12px">MLX Academy</div>
+        <div style="font-size:22px;font-weight:900;margin:6px 0;background:linear-gradient(90deg,#22d3ee,#7c3aed);-webkit-background-clip:text;background-clip:text;color:transparent;">Certificate of Completion</div>
+        <div class="muted" style="font-size:14px">This certifies that</div>
+        <div style="font-size:18px;font-weight:800;margin:4px 0;color:#e2e8f0">${(state.user?.username||"Learner").toUpperCase()}</div>
+        <div class="muted" style="font-size:14px">has successfully completed</div>
+        <div style="font-weight:700;color:#a5b4fc">Machine Learning: Zero → Industry-Ready</div>
+        <div class="muted" style="font-size:12px;margin-top:6px">Issued on ${new Date().toLocaleDateString()}</div>`;
+      const btn = el("button",{class:"btn", disabled:!enabled, onclick:()=>downloadSVG(cert)},
+        enabled ? "Download Certificate" : "Complete course to unlock");
+      wrap.append(cert, btn);
+      return wrap;
+    }
+
+    function downloadSVG(node){
+      const xml = new XMLSerializer().serializeToString(node);
+      const data = `
+        <svg xmlns='http://www.w3.org/2000/svg' width='1000' height='600'>
+          <foreignObject width='100%' height='100%'>
+            <div xmlns='http://www.w3.org/1999/xhtml'>${xml}</div>
+          </foreignObject>
+        </svg>`;
+      const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(data);
+      const a = document.createElement('a'); a.href = url; a.download = 'mlx-certificate.svg'; a.click();
+      toast("Certificate downloaded as SVG");
+    }
+
+    // Kickoff
+    window.addEventListener("hashchange", render);
+    if (!location.hash) setRoute("/login");
+    render();
+  </script>
+</body>
+</html>
